@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Database Assistant</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Inter',sans-serif;
+}
+
+body{
+    background:#0b0f19;
+    color:white;
+    height:100vh;
+    overflow:hidden;
+}
+
+.container{
+    display:flex;
+    height:100vh;
+}
+
+/* Sidebar */
+
+.sidebar{
+    width:280px;
+    background:#111827;
+    border-right:1px solid #1f2937;
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    overflow-y:auto;
+}
+
+.logo{
+    font-size:24px;
+    font-weight:700;
+    margin-bottom:25px;
+}
+
+.new-chat{
+    width:100%;
+    background:#7c3aed;
+    border:none;
+    color:white;
+    padding:14px;
+    border-radius:12px;
+    cursor:pointer;
+    font-weight:600;
+    transition:background 0.3s;
+}
+
+.new-chat:hover{
+    background:#6d28d9;
+}
+
+.section-title{
+    margin-top:30px;
+    margin-bottom:12px;
+    color:#9ca3af;
+    font-size:13px;
+    text-transform:uppercase;
+}
+
+.history-list{
+    flex:1;
+    overflow-y:auto;
+}
+
+.history-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px;
+    border-radius:10px;
+    margin-bottom:8px;
+    cursor:pointer;
+    background:#161f2e;
+    transition:background 0.3s;
+    position:relative;
+}
+
+.history-item:hover{
+    background:#1f2937;
+}
+
+.history-item.active{
+    background:#7c3aed;
+}
+
+.history-title{
+    flex:1;
+    font-size:14px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.history-menu-btn{
+    background:none;
+    border:none;
+    color:#9ca3af;
+    cursor:pointer;
+    padding:4px 8px;
+    margin-left:8px;
+    font-size:18px;
+    transition:color 0.3s;
+}
+
+.history-menu-btn:hover{
+    color:white;
+}
+
+.history-menu{
+    display:none;
+    position:absolute;
+    right:0;
+    top:100%;
+    background:#0b0f19;
+    border:1px solid #1f2937;
+    border-radius:8px;
+    min-width:120px;
+    z-index:100;
+    margin-top:4px;
+}
+
+.history-menu.show{
+    display:block;
+}
+
+.history-menu-item{
+    padding:10px 15px;
+    cursor:pointer;
+    color:white;
+    border:none;
+    background:none;
+    width:100%;
+    text-align:left;
+    font-size:13px;
+    transition:background 0.3s;
+}
+
+.history-menu-item:hover{
+    background:#1f2937;
+}
+
+.history-menu-item.delete{
+    color:#ef4444;
+}
+
+.agent-card{
+    margin-top:auto;
+    background:#161f2e;
+    border-radius:12px;
+    padding:15px;
+    margin-bottom:20px;
+}
+
+.agent-card.active{
+    background:#7c3aed;
+    border:2px solid #06b6d4;
+}
+
+.agent-name{
+    font-weight:600;
+}
+
+.agent-model{
+    font-size:13px;
+    color:#9ca3af;
+    margin-top:5px;
+}
+
+.agent-card.active .agent-model{
+    color:#e0f2fe;
+}
+
+/* Main */
+
+.main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+}
+
+.header{
+    height:70px;
+    border-bottom:1px solid #1f2937;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 25px;
+}
+
+.title{
+    font-size:20px;
+    font-weight:700;
+}
+
+.chat-area{
+    flex:1;
+    overflow-y:auto;
+    padding:40px;
+    display:flex;
+    flex-direction:column;
+}
+
+.welcome{
+    text-align:center;
+    margin-top:80px;
+}
+
+.ai-orb{
+    width:130px;
+    height:130px;
+    border-radius:50%;
+    margin:auto;
+    background:linear-gradient(
+        135deg,
+        #8b5cf6,
+        #3b82f6,
+        #06b6d4
+    );
+
+    box-shadow:
+        0 0 40px rgba(139,92,246,.8),
+        0 0 90px rgba(59,130,246,.4);
+
+    animation:float 4s ease-in-out infinite;
+}
+
+@keyframes float{
+    0%{transform:translateY(0);}
+    50%{transform:translateY(-15px);}
+    100%{transform:translateY(0);}
+}
+
+.welcome h1{
+    margin-top:25px;
+    font-size:42px;
+}
+
+.welcome p{
+    color:#9ca3af;
+    margin-top:12px;
+}
+
+/* Messages */
+
+.messages-container{
+    display:none;
+    flex-direction:column;
+    gap:15px;
+}
+
+.messages-container.show{
+    display:flex;
+}
+
+.message{
+    display:flex;
+    gap:12px;
+    animation:slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn{
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+.message.user{
+    justify-content:flex-end;
+}
+
+.message-content{
+    max-width:70%;
+    padding:14px 16px;
+    border-radius:12px;
+    word-wrap:break-word;
+}
+
+.message.user .message-content{
+    background:#7c3aed;
+    color:white;
+}
+
+.message.assistant .message-content{
+    background:#1f2937;
+    color:#e5e7eb;
+}
+
+/* Input */
+
+.chat-input{
+    border-top:1px solid #1f2937;
+    padding:20px;
+}
+
+.input-box{
+    display:flex;
+    background:#111827;
+    border-radius:16px;
+    padding:10px;
+    gap:8px;
+}
+
+.input-box input{
+    flex:1;
+    border:none;
+    background:transparent;
+    color:white;
+    outline:none;
+    padding:10px;
+    font-size:15px;
+}
+
+.input-box input::placeholder{
+    color:#6b7280;
+}
+
+.send-btn{
+    background:#7c3aed;
+    border:none;
+    color:white;
+    width:50px;
+    height:40px;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:background 0.3s;
+}
+
+.send-btn:hover{
+    background:#6d28d9;
+}
+
+.send-btn:disabled{
+    background:#4b5563;
+    cursor:not-allowed;
+}
+
+.loading{
+    color:#9ca3af;
+    font-size:12px;
+    margin-top:8px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Sidebar -->
+
+    <div class="sidebar">
+
+        <div class="logo">
+            AI Assistant
+        </div>
+
+        <button class="new-chat" id="newChatBtn">
+            + New Chat
+        </button>
+
+        <div class="section-title">
+            History
+        </div>
+
+        <div class="history-list" id="historyList">
+        </div>
+
+        <div class="section-title">
+            Active Agent
+        </div>
+
+        <div class="agent-card active" id="activeAgent">
+            <div class="agent-name" id="agentName">
+                Loading...
+            </div>
+
+            <div class="agent-model" id="agentModel">
+                Claude Sonnet 4.5
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Main -->
+
+    <div class="main">
+
+        <div class="header">
+            <div class="title" id="headerTitle">
+                Welcome
+            </div>
+        </div>
+
+        <div class="chat-area">
+
+            <div class="welcome" id="welcomeSection">
+                <div class="ai-orb"></div>
+                <h1>Welcome Back</h1>
+                <p>
+                    Manage orders, customers and products
+                    using natural language.
+                </p>
+            </div>
+
+            <div class="messages-container" id="messagesContainer">
+            </div>
+
+        </div>
+
+        <div class="chat-input">
+
+            <div class="input-box">
+
+                <input
+                    type="text"
+                    placeholder="Ask about orders..."
+                    id="messageInput"
+                    autocomplete="off"
+                >
+
+                <button class="send-btn" id="sendBtn">
+                    ➜
+                </button>
+
+            </div>
+
+            <div class="loading" id="loadingText" style="display:none;">
+                Processing...
+            </div>
+
+        </div>
+
+</div>
+
+<script>
+
+// ─── Global State ──────────────────────────────────
+let currentAgent = null;
+let currentConversation = null;
+let messageSet = new Set();
+
+// ─── DOM Elements ──────────────────────────────────
+const newChatBtn = document.getElementById("newChatBtn");
+const messageInput = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
+const chatArea = document.getElementById("messagesContainer");
+const welcomeSection = document.getElementById("welcomeSection");
+const historyList = document.getElementById("historyList");
+const activeAgentDiv = document.getElementById("activeAgent");
+const headerTitle = document.getElementById("headerTitle");
+const agentName = document.getElementById("agentName");
+const agentModel = document.getElementById("agentModel");
+const loadingText = document.getElementById("loadingText");
+
+// ─── Initialize ──────────────────────────────────
+function init() {
+    loadAgent();
+    loadConversationHistory();
+    setupEventListeners();
+}
+
+// ─── Load Current Agent ──────────────────────────────────
+function loadAgent() {
+    const pathParts = window.location.pathname.split("/");
+    const agentSlug = pathParts[2];
+    
+    if (!agentSlug) return;
+    
+    currentAgent = agentSlug;
+    
+    // Extract agent info from context (passed by Django template)
+    if (window.agentData) {
+        agentName.textContent = window.agentData.display_name;
+        agentModel.textContent = window.agentData.model;
+        headerTitle.textContent = window.agentData.display_name;
+    }
+    
+    loadConversationHistory();
+}
+
+// ─── Load Conversation History ──────────────────────────────────
+function loadConversationHistory() {
+    if (!currentAgent) return;
+    
+    fetch(`/agent/${currentAgent}/history/`)
+        .then(res => res.json())
+        .then(data => {
+            historyList.innerHTML = "";
+            messageSet.clear();
+            
+            data.conversations.forEach(conv => {
+                messageSet.add(conv.id);
+                addHistoryItem(conv);
+            });
+        })
+        .catch(err => console.error("Error loading history:", err));
+}
+
+// ─── Add History Item ──────────────────────────────────
+function addHistoryItem(conversation) {
+    const item = document.createElement("div");
+    item.className = "history-item";
+    item.id = `conv-${conversation.id}`;
+    
+    if (currentConversation && currentConversation.id === conversation.id) {
+        item.classList.add("active");
+    }
+    
+    item.innerHTML = `
+        <div class="history-title" title="${conversation.title}">
+            ${conversation.title}
+        </div>
+        <button type="button" class="history-menu-btn" onclick="event.stopPropagation(); toggleMenu(${conversation.id})">
+            ⋯
+        </button>
+        <div class="history-menu" id="menu-${conversation.id}">
+            <button type="button" class="history-menu-item" onclick="event.stopPropagation(); loadConversation(${conversation.id})">
+                Open
+            </button>
+            <button type="button" class="history-menu-item delete" onclick="event.stopPropagation(); deleteConversation(${conversation.id})">
+                Delete
+            </button>
+        </div>
+    `;
+    
+    item.addEventListener("click", () => loadConversation(conversation.id));
+    historyList.appendChild(item);
+}
+
+// ─── Toggle Menu ──────────────────────────────────
+function toggleMenu(conversationId) {
+    const menu = document.getElementById(`menu-${conversationId}`);
+    menu.classList.toggle("show");
+}
+
+// ─── Load Conversation ──────────────────────────────────
+function loadConversation(conversationId) {
+    if (!currentAgent) return;
+    
+    window.location.href = `/chat/${currentAgent}/${conversationId}/`;
+}
+
+// ─── Delete Conversation ──────────────────────────────────
+function deleteConversation(conversationId) {
+    if (!confirm("Delete this conversation?")) return;
+    if (!currentAgent) return;
+    
+    fetch(`/chat/${currentAgent}/delete/${conversationId}/`, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success && data.status !== 'deleted') {
+            throw new Error(data.error || 'Delete failed');
+        }
+
+        const item = document.getElementById(`conv-${conversationId}`);
+        if (item) item.remove();
+        messageSet.delete(conversationId);
+        
+        if (currentConversation && currentConversation.id === conversationId) {
+            window.location.href = `/chat/${currentAgent}/`;
+        }
+    })
+    .catch(err => console.error("Error deleting conversation:", err));
+}
+
+// ─── New Chat ──────────────────────────────────
+function newChat() {
+    if (!currentAgent) return;
+    
+    fetch(`/chat/${currentAgent}/new/`, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+        }
+    })
+    .then(() => {
+        window.location.href = `/chat/${currentAgent}/`;
+    })
+    .catch(err => console.error("Error creating new chat:", err));
+}
+
+// ─── Send Message ──────────────────────────────────
+function sendMessage() {
+    const message = messageInput.value.trim();
+    if (!message || !currentAgent || !currentConversation) return;
+    
+    messageInput.value = "";
+    sendBtn.disabled = true;
+    loadingText.style.display = "block";
+    
+    // Show user message
+    displayMessage(message, "user");
+    
+    fetch(`/chat/${currentAgent}/send/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({
+            message: message,
+            conversation_id: currentConversation.id,
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            displayMessage("Error: " + data.error, "assistant");
+        } else {
+            currentConversation.id = data.conversation_id;
+            if (data.conversation_title) {
+                currentConversation.title = data.conversation_title;
+            }
+            displayMessage(data.reply, "assistant");
+            loadConversationHistory();
+        }
+    })
+    .catch(err => {
+        displayMessage("Error: " + err.message, "assistant");
+    })
+    .finally(() => {
+        sendBtn.disabled = false;
+        loadingText.style.display = "none";
+        messageInput.focus();
+    });
+}
+
+// ─── Display Message ──────────────────────────────────
+function displayMessage(text, role) {
+    welcomeSection.style.display = "none";
+    chatArea.classList.add("show");
+    
+    const msgEl = document.createElement("div");
+    msgEl.className = `message ${role}`;
+    msgEl.innerHTML = `<div class="message-content">${escapeHtml(text)}</div>`;
+    
+    chatArea.appendChild(msgEl);
+    chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+// ─── Escape HTML ──────────────────────────────────
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ─── Get CSRF Token ──────────────────────────────────
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// ─── Setup Event Listeners ──────────────────────────────────
+function setupEventListeners() {
+    newChatBtn.addEventListener("click", newChat);
+    sendBtn.addEventListener("click", sendMessage);
+    messageInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") sendMessage();
+    });
+    
+    // Close menu when clicking outside
+    document.addEventListener("click", () => {
+        document.querySelectorAll(".history-menu.show").forEach(menu => {
+            menu.classList.remove("show");
+        });
+    });
+}
+
+// ─── Populate Messages (from Django context) ──────────────────────────────
+function loadMessagesFromContext() {
+    if (!window.messagesData) return;
+    
+    chatArea.innerHTML = "";
+    welcomeSection.style.display = "none";
+    chatArea.classList.add("show");
+    
+    window.messagesData.forEach(msg => {
+        const role = msg.role === "user" ? "user" : "assistant";
+        displayMessage(msg.content, role);
+    });
+}
+
+// ─── Start App ──────────────────────────────────
+document.addEventListener("DOMContentLoaded", init);
+
+// Expose functions for inline event handlers
+window.toggleMenu = toggleMenu;
+window.loadConversation = loadConversation;
+window.deleteConversation = deleteConversation;
+
+</script>
+
+<!-- Django context injection -->
+<script>
+{% if active_agent %}
+window.agentData = {
+    display_name: "{{ active_agent.display_name }}",
+    model: "{{ active_agent.model }}",
+    slug: "{{ active_agent.slug }}"
+};
+window.currentAgent = "{{ active_agent.slug }}";
+currentAgent = "{{ active_agent.slug }}";
+
+{% if active_conversation %}
+window.currentConversation = {
+    id: {{ active_conversation.id }},
+    title: "{{ active_conversation.title }}"
+};
+currentConversation = {
+    id: {{ active_conversation.id }},
+    title: "{{ active_conversation.title }}"
+};
+
+window.messagesData = [
+    {% for message in messages %}
+    {
+        role: "{{ message.role }}",
+        content: "{{ message.content|escapejs }}"
+    },
+    {% endfor %}
+];
+
+// Load messages from context after page load
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(loadMessagesFromContext, 100);
+});
+{% endif %}
+{% endif %}
+</script>
+
+</body>
+
+</html>
