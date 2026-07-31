@@ -97,14 +97,6 @@
 - Cancellation flows: `Cancel order ORD007`
 - Ecommerce admin QA: `List pending orders` or `Which customers are active?`
 
-## Resume-ready highlights
-
-- Built an AI agent platform that orchestrates an LLM with backend tools
-- Implemented robust Django data models for ecommerce workflows
-- Designed a modern chat UI with live history and order summary rendering
-- Integrated Anthropic Claude plus custom tool call pipelines
-- Delivered real-world behavior by excluding cancelled/deleted orders from default results
-
 ## Dependencies
 
 - `annotated-types==0.7.0`
