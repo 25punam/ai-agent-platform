@@ -4,7 +4,8 @@
 
 <img width="1080" height="625" alt="image" src="https://github.com/user-attachments/assets/5bfbf97c-47ac-452f-b246-633966172da6" />
 
-<img width="1077" height="660" alt="image" src="https://github.com/user-attachments/assets/b0abe2eb-bdd3-4e3f-8d22-f39c40b8b275" />
+<img width="1080" height="628" alt="image" src="https://github.com/user-attachments/assets/2480559a-9748-47a4-9258-72b7e96b4051" />
+
 
 
 # AI Agent Platform
