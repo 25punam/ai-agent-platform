@@ -1,11 +1,15 @@
 import json
+import traceback
+import logging
 
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-
-from .models import Agent, Conversation
+from chat.models import Message, Session
+from .models import Agent
 from .services import ChatService
+
+logger = logging.getLogger(__name__)
 
 
 # ─────────────────────────────────────────────
@@ -40,15 +44,20 @@ def send_message(request, agent_slug):
     service = ChatService()
 
     try:
+        print("!!!! agents/views.py send_message TRIGGERED !!!!")
+        print("AGENT_SLUG=", agent_slug)
+        print("RAW_BODY=", request.body[:500])
         data = json.loads(request.body)
+
 
         user_text = data.get(
             "message",
             "",
         ).strip()
 
-        conv_id = (
-            data.get("conversation_id")
+        session_id = (
+            data.get("session_id")
+            or data.get("conversation_id")
             or request.session.get(
                 f"conv_{agent_slug}"
             )
@@ -63,35 +72,54 @@ def send_message(request, agent_slug):
                 status=400,
             )
 
-        conversation = (
-            service.get_or_create_conversation(
+        session = (
+            service.get_or_create_session(
                 agent,
-                conv_id,
+                session_id,
             )
         )
 
         request.session[
             f"conv_{agent_slug}"
-        ] = conversation.id
+        ] = session.id
+
+        service.set_title_from_message(
+            session,
+            user_text,
+        )
 
         reply = service.chat(
-            conversation,
+            session,
             user_text,
         )
 
         return JsonResponse(
             {
                 "reply": reply,
-                "conversation_id": conversation.id,
+                "__backend_marker": "agents/views.py",
+                "session_id": session.id,
+                "conversation_id": session.id,
+                "session_title":
+                    session.title or f"Chat {session.id}",
                 "conversation_title":
-                    conversation.title or "",
+                    session.title or f"Chat {session.id}",
             }
         )
 
     except Exception as exc:
+        tb_str = traceback.format_exc()
+        print("=" * 80)
+        print("EXCEPTION IN agents/views.py send_message")
+        print("=" * 80)
+        print(tb_str)
+        print("=" * 80)
+        logger.error(f"Exception in send_message: {tb_str}")
+        
         return JsonResponse(
             {
-                "error": str(exc)
+                "error": str(exc),
+                "traceback": tb_str,
+                "exception_type": type(exc).__name__
             },
             status=500,
         )
@@ -109,27 +137,26 @@ def conversation_list_json(
         slug=agent_slug,
     )
 
-    conversations = (
-        agent.conversations
+    sessions = (
+        agent.sessions
         .order_by("-created_at")
     )
 
     data = []
 
-    for conversation in conversations:
+    service = ChatService()
 
+    for session in sessions:
         data.append(
             {
-                "id": conversation.id,
+                "id": session.id,
                 "title":
-                    conversation.title
-                    or f"Chat {conversation.id}",
+                    service.get_session_title(session),
                 "created_at":
-                    conversation.created_at.strftime(
+                    session.created_at.strftime(
                         "%d %b %Y %H:%M"
                     ),
-                "message_count":
-                    conversation.messages.count(),
+                "message_count": session.messages.count(),
             }
         )
 
@@ -178,15 +205,15 @@ def delete_conversation(
         slug=agent_slug,
     )
 
-    conversation = (
+    session = (
         get_object_or_404(
-            Conversation,
+            Session,
             id=conversation_id,
             agent=agent,
         )
     )
 
-    conversation.delete()
+    session.delete()
 
     session_key = (
         f"conv_{agent_slug}"
@@ -207,4 +234,35 @@ def delete_conversation(
             "success": True,
             "status": "deleted",
         }
+    )
+
+def chat_view(
+    request,
+    agent_slug,
+    conversation_id=None,
+):
+    agent = get_object_or_404(
+        Agent,
+        slug=agent_slug,
+    )
+
+    session = None
+    messages = []
+
+    if conversation_id:
+        session = get_object_or_404(
+            Session,
+            id=conversation_id,
+            agent=agent,
+        )
+        messages = session.messages.order_by("created_at")
+
+    return render(
+        request,
+        "index.html",
+        {
+            "agent": agent,
+            "conversation": session,
+            "messages": messages,
+        },
     )

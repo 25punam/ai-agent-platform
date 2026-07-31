@@ -1,5 +1,4 @@
-from tools.registry import get_all_tool_schemas, call_tool
+from tools.registry import get_tool_schemas_for
 
 def get_tools_for_agent(agent):
-    tool_names = list(agent.tools.values_list("name", flat=True))
-    return get_all_tool_schemas()
+    return get_tool_schemas_for()

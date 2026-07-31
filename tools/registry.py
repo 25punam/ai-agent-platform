@@ -72,3 +72,11 @@ def call_tool(name: str, inputs: dict):
         raise Exception(f"Tool {name} not found")
 
     return _registry[name]["fn"](**inputs)
+
+
+def get_all_tool_schemas(tool_names=None):
+    return get_tool_schemas_for(tool_names)
+
+
+# Import tool definition modules so decorators run and tools are registered.
+from . import ecommerce_tools  # noqa: F401

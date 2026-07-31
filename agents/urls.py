@@ -13,7 +13,11 @@ urlpatterns = [
     ),
 
     # Chat — latest / session conversation
-    path("chat/<slug:agent_slug>/", views.chat_view, name="chat"),
+    path(
+        "chat/<slug:agent_slug>/",
+        views.chat_view,
+        name="chat",
+    ),
 
     # Chat — specific conversation
     path(
