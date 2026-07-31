@@ -1,3 +1,7 @@
+<img width="2160" height="1440" alt="Screenshot 2026-07-31 124540" src="https://github.com/user-attachments/assets/6553534e-c857-4ce6-a3d9-6afb6e6cbc81" />
+<img width="2160" height="1440" alt="Screenshot 2026-07-31 122518" src="https://github.com/user-attachments/assets/cdc30f13-1425-4de6-b38b-acbd824e5fd8" />
+
+
 
 # AI Agent Platform
 
