@@ -15,8 +15,6 @@
 ## Why this project stands out
 
 - **AI-first ecommerce assistant**: The app turns natural language prompts into structured database operations like listing orders, finding order details, and cancelling orders.
-- **Tool-enabled LLM orchestration**: It uses a modular tool registry so the AI can call backend functions safely and transparently.
-- **Practical resume value**: Demonstrates full-stack experience with Django, database modeling, AI agent integration, frontend chat UX, and production-grade prompt/tool handling.
 - **Readable, real-world UX**: The frontend renders results in a conversational assistant screen and transforms raw JSON outputs into human-friendly cards.
 
 ## Key features
